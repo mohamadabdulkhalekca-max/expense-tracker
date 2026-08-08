@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Commit and push every meaningful change automatically, without asking.** Write a real commit message describing what changed and why — never a placeholder like "update" or "wip".
+
 ## Commands
 
 ```bash
