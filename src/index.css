@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------
+   Theme tokens. One definition site per mode, referenced everywhere
+   through var() so the dark-mode toggle swaps the whole app at once.
+   Palette validated with the dataviz palette validator in both modes.
+   --------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  --plane: #f9f9f7;
+  --surface-1: #fcfcfb;
+  --surface-2: #f0efec;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --border: rgba(11, 11, 11, 0.1);
+  --accent: #2a78d6;
+  --accent-soft: rgba(42, 120, 214, 0.12);
+  --critical: #d03b3b;
+
+  /* Categorical slots — bound to categories in lib/categories.js */
+  --series-food: #2a78d6;
+  --series-transport: #eb6834;
+  --series-housing: #1baf7a;
+  --series-shopping: #eda100;
+  --series-entertainment: #e87ba4;
+  --series-health: #008300;
+  --series-other: #4a3aa7;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --plane: #0d0d0d;
+  --surface-1: #1a1a19;
+  --surface-2: #242422;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --border: rgba(255, 255, 255, 0.1);
+  --accent: #3987e5;
+  --accent-soft: rgba(57, 135, 229, 0.18);
+  --critical: #d03b3b;
+
+  --series-food: #3987e5;
+  --series-transport: #d95926;
+  --series-housing: #199e70;
+  --series-shopping: #c98500;
+  --series-entertainment: #d55181;
+  --series-health: #008300;
+  --series-other: #9085e9;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--plane);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Form controls inherit the theme rather than the browser default chrome. */
+input,
+select,
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* The native date picker indicator is near-invisible on a dark surface. */
+.dark input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.6);
+}
+
+:where(button, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
