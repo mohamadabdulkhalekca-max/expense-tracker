@@ -1,14 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import AuthScreen from './components/AuthScreen'
 import BudgetMeter from './components/BudgetMeter'
 import CategoryDonut from './components/CategoryDonut'
 import ExpenseForm from './components/ExpenseForm'
 import ExpenseList from './components/ExpenseList'
 import Header from './components/Header'
 import SummaryCards from './components/SummaryCards'
+import SupabaseSetupNotice from './components/SupabaseSetupNotice'
+import { useAuth } from './hooks/useAuth'
 import { useBudget } from './hooks/useBudget'
 import { useExpenses } from './hooks/useExpenses'
 import { useTheme } from './hooks/useTheme'
 import { formatMonthLabel, monthKeyOf, toMonthKey } from './lib/format'
+import { migrateLegacyDataIfNeeded } from './lib/migrateLegacyData'
+import { supabaseConfigured } from './lib/supabaseClient'
 
 // Shown in the header greeting.
 const USER_NAME = 'Mohamad'
@@ -25,10 +30,25 @@ function Card({ title, children, className = '' }) {
 }
 
 export default function App() {
-  const { expenses, addExpense, updateExpense, deleteExpense } = useExpenses()
-  const { budget, setBudget } = useBudget()
+  const { user, loading: authLoading, signUp, signIn, signOut } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const [month, setMonth] = useState(() => toMonthKey())
+
+  const { expenses, addExpense, updateExpense, deleteExpense, refresh: refreshExpenses } =
+    useExpenses(user?.id)
+  const { budget, setBudget, refresh: refreshBudget } = useBudget(user?.id, month)
+
+  // Runs once per sign-in: pulls any pre-Supabase localStorage data into
+  // this user's tables, then refetches so it shows up without a reload.
+  const migratedFor = useRef(null)
+  useEffect(() => {
+    if (!user || migratedFor.current === user.id) return
+    migratedFor.current = user.id
+    migrateLegacyDataIfNeeded(user.id).then(() => {
+      refreshExpenses()
+      refreshBudget()
+    })
+  }, [user, refreshExpenses, refreshBudget])
 
   // The single derived slice every section below reads from — the list, the
   // summary, the meter, and the chart never filter independently.
@@ -59,6 +79,10 @@ export default function App() {
     followMonth(values.date)
   }
 
+  if (!supabaseConfigured) return <SupabaseSetupNotice />
+  if (authLoading) return null
+  if (!user) return <AuthScreen onSignIn={signIn} onSignUp={signUp} />
+
   return (
     <div className="min-h-full">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10">
@@ -68,6 +92,7 @@ export default function App() {
           theme={theme}
           onToggleTheme={toggleTheme}
           userName={USER_NAME}
+          onSignOut={signOut}
         />
 
         <Card>

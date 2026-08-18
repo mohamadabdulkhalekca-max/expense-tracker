@@ -1,68 +1,91 @@
 import { useCallback, useEffect, useState } from 'react'
-import { KEYS, load, save } from '../lib/storage'
+import { supabase } from '../lib/supabaseClient'
 
-/** localStorage can hold anything; only keep rows that still look like expenses. */
-function sanitize(rows) {
-  if (!Array.isArray(rows)) return []
-  return rows.filter(
-    (r) =>
-      r &&
-      typeof r.id === 'string' &&
-      typeof r.name === 'string' &&
-      typeof r.date === 'string' &&
-      Number.isFinite(r.amount),
-  )
-}
-
-function newId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+function fromRow(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    amount: row.amount,
+    category: row.category,
+    date: row.date,
+    createdAt: new Date(row.created_at).getTime(),
+  }
 }
 
 /**
- * Expense list + persistence. Deliberately thin — this is the seam a real
- * backend would replace without any component changing.
+ * Expense list + Supabase persistence, scoped to `userId` (RLS also enforces
+ * this server-side). Same row shape as before Supabase replaced localStorage
+ * -- this is the seam a real backend swaps in without any component changing.
  */
-export function useExpenses() {
-  const [expenses, setExpenses] = useState(() => sanitize(load(KEYS.expenses, [])))
+export function useExpenses(userId) {
+  const [expenses, setExpenses] = useState([])
+
+  const refresh = useCallback(async () => {
+    if (!userId) {
+      setExpenses([])
+      return
+    }
+    const { data, error } = await supabase
+      .from('expenses')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+    if (!error) setExpenses((data ?? []).map(fromRow))
+    else console.error('Failed to load expenses', error)
+  }, [userId])
 
   useEffect(() => {
-    save(KEYS.expenses, expenses)
-  }, [expenses])
+    refresh()
+  }, [refresh])
 
-  const addExpense = useCallback(({ name, amount, category, date }) => {
-    const expense = {
-      id: newId(),
+  const addExpense = useCallback(
+    async ({ name, amount, category, date }) => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .insert({
+          user_id: userId,
+          name: name.trim(),
+          amount: Math.round(Number(amount) * 100) / 100,
+          category,
+          date,
+        })
+        .select()
+        .single()
+      if (error) {
+        console.error('Failed to add expense', error)
+        return
+      }
+      const expense = fromRow(data)
+      setExpenses((prev) => [expense, ...prev])
+      return expense
+    },
+    [userId],
+  )
+
+  /** Replace an expense's editable fields. `id` and `createdAt` are preserved. */
+  const updateExpense = useCallback(async (id, { name, amount, category, date }) => {
+    const patch = {
       name: name.trim(),
       amount: Math.round(Number(amount) * 100) / 100,
       category,
       date,
-      createdAt: Date.now(),
     }
-    setExpenses((prev) => [expense, ...prev])
-    return expense
+    const { error } = await supabase.from('expenses').update(patch).eq('id', id)
+    if (error) {
+      console.error('Failed to update expense', error)
+      return
+    }
+    setExpenses((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)))
   }, [])
 
-  /** Replace an expense's editable fields. `id` and `createdAt` are preserved. */
-  const updateExpense = useCallback((id, { name, amount, category, date }) => {
-    setExpenses((prev) =>
-      prev.map((e) =>
-        e.id === id
-          ? {
-              ...e,
-              name: name.trim(),
-              amount: Math.round(Number(amount) * 100) / 100,
-              category,
-              date,
-            }
-          : e,
-      ),
-    )
-  }, [])
-
-  const deleteExpense = useCallback((id) => {
+  const deleteExpense = useCallback(async (id) => {
+    const { error } = await supabase.from('expenses').delete().eq('id', id)
+    if (error) {
+      console.error('Failed to delete expense', error)
+      return
+    }
     setExpenses((prev) => prev.filter((e) => e.id !== id))
   }, [])
 
-  return { expenses, addExpense, updateExpense, deleteExpense }
+  return { expenses, addExpense, updateExpense, deleteExpense, refresh }
 }

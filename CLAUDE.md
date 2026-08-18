@@ -15,23 +15,37 @@ npm run preview  # serve the built dist/
 
 There is no test runner, linter, or formatter configured — `dev`, `build`, and `preview` are the only scripts. Verify changes by running the dev server and exercising the UI; `npm run build` is the closest thing to a correctness gate (it will fail on syntax/import errors).
 
+### Supabase setup
+
+Data and auth are backed by Supabase — there is no other backend. To run locally:
+
+1. Create a Supabase project.
+2. Run [supabase/schema.sql](supabase/schema.sql) in its SQL editor (creates `expenses` and `budgets` with RLS scoped to `auth.uid()`).
+3. Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` from Settings → API.
+4. `npm run dev`. Without those env vars the app renders a setup notice instead of the tracker (see `supabaseConfigured` in `src/lib/supabaseClient.js`).
+
+Auth is email/password only (`src/hooks/useAuth.js`, `src/components/AuthScreen.jsx`). A signed-out user sees `AuthScreen` instead of the tracker; `App.jsx` gates on `user` from `useAuth`.
+
 ## Architecture
 
-A single-page React 18 + Vite + Tailwind expense tracker with **no backend**. All state lives in `localStorage`; there is no network layer, no router, and no global store.
+A single-page React 18 + Vite + Tailwind expense tracker with **Supabase as its only backend** — Postgres for data, Supabase Auth for accounts. There is still no router and no global store; `App.jsx` is the only place that composes hooks.
 
-**Data flow is strictly one-way through `App.jsx`.** It owns the three hooks (`useExpenses`, `useBudget`, `useTheme`) plus the selected `month`, derives `monthExpenses` and `spent` once, and passes those down. Components are presentational and never read storage or filter by month themselves — if a section needs different data, derive it in `App.jsx` and pass it in.
+**Data flow is strictly one-way through `App.jsx`.** It owns `useAuth`, the two Supabase-backed hooks (`useExpenses`, `useBudget`), `useTheme`, and the selected `month`, derives `monthExpenses` and `spent` once, and passes those down. Components are presentational and never touch Supabase or filter by month themselves — if a section needs different data, derive it in `App.jsx` and pass it in.
 
 **Layers:**
 
-- `src/lib/storage.js` — the only module that touches `localStorage`. Both read and write are try/caught: corrupt JSON must never white-screen the app, and a quota error must never throw out of a render. All keys live in the exported `KEYS` object (`expense-tracker:*:v1`).
-- `src/hooks/*` — one hook per persisted slice. Each seeds state from `load()` and mirrors it back with a `useEffect` + `save()`. `useExpenses` also sanitizes rows on load (localStorage can hold anything) and is deliberately thin — it's the seam a real backend would replace without any component changing.
+- `src/lib/supabaseClient.js` — the only module that constructs the Supabase client. Exports `supabaseConfigured` so a missing env var renders a setup screen instead of throwing at import time.
+- `src/hooks/useAuth.js` — session state (`onAuthStateChange`) plus `signUp`/`signIn`/`signOut`. `user` is `null` until signed in.
+- `src/hooks/useExpenses.js` / `src/hooks/useBudget.js` — one hook per Supabase table, both scoped by `userId` (RLS enforces this again server-side). Same row shape (`{ id, name, amount, category, date, createdAt }`) as the old localStorage version, so components didn't change when the backend did — that's the seam `useExpenses` was already documented as being. `useBudget` is keyed by `(userId, month)`; a missing row is `null` ("not set"), not `0`.
+- `src/lib/migrateLegacyData.js` — one-time best-effort import of a returning browser's pre-Supabase `localStorage` data into the newly signed-in user's tables, gated by a `localStorage` flag so it runs at most once. The old budget applied to every month; it's seeded onto the current month only since the new schema has no "every month" concept.
+- `src/lib/storage.js` — the only module that still touches `localStorage`, now just for the `theme` key (device preference, not user data) plus the two read-only `legacy*` keys `migrateLegacyData.js` looks for. Reads/writes are try/caught: corrupt JSON must never white-screen the app, and a quota error must never throw out of a render.
 - `src/lib/format.js` — currency/date helpers. **Dates are plain `'YYYY-MM-DD'` strings, parsed by splitting on `'-'`, never with `new Date(str)`** — that parses a bare date as UTC and would shift an evening expense in a western timezone into the previous day and possibly the wrong month. Use `toISODate`, `parseISODate`, `monthKeyOf`, `toMonthKey`, `shiftMonth` rather than hand-rolling date math.
 - `src/lib/categories.js` — the seven categories and their permanent color slots.
-- `src/components/*` — presentational; `ExpenseForm` is used for both adding and editing (edit mode = `initialValues` + `onCancel` supplied).
+- `src/components/*` — presentational; `ExpenseForm` is used for both adding and editing (edit mode = `initialValues` + `onCancel` supplied). `AuthScreen` and `SupabaseSetupNotice` are the two screens `App.jsx` can render instead of the tracker.
 
-**Money** is stored as a number rounded to cents (`Math.round(n * 100) / 100`) at the hook boundary, so components can sum amounts directly.
+**Money** is stored as `numeric(10,2)` in Postgres and rounded to cents (`Math.round(n * 100) / 100`) again at the hook boundary, so components can sum amounts directly.
 
-**`budget === null`** means "not set yet" and the UI renders it differently from a budget of `0`. Preserve that distinction.
+**`budget === null`** means "not set yet" and the UI renders it differently from a budget of `0`. Preserve that distinction — it's now the absence of a `budgets` row for that `(user_id, month)`, not a stored `null`.
 
 ## Theming and color
 

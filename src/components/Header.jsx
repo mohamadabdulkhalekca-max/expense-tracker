@@ -43,10 +43,24 @@ function MoonIcon() {
   )
 }
 
+function SignOutIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M15 17.5 20 12l-5-5.5M20 12H9M9 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H9"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 const navButton =
   'flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-2)] disabled:pointer-events-none disabled:opacity-35'
 
-export default function Header({ month, onMonthChange, theme, onToggleTheme, userName }) {
+export default function Header({ month, onMonthChange, theme, onToggleTheme, userName, onSignOut }) {
   // There is nothing to see in the future, so forward stops at the current month.
   const atCurrentMonth = month >= toMonthKey()
 
@@ -86,6 +100,17 @@ export default function Header({ month, onMonthChange, theme, onToggleTheme, use
         >
           {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
         </button>
+
+        {onSignOut ? (
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-2)]"
+            aria-label="Sign out"
+          >
+            <SignOutIcon />
+          </button>
+        ) : null}
       </div>
     </header>
   )
