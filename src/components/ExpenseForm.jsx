@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { CATEGORIES, DEFAULT_CATEGORY_ID } from '../lib/categories'
 import { toISODate } from '../lib/format'
+import DateField from './DateField'
 
 const fieldLabel = 'text-xs font-medium text-[var(--text-secondary)]'
 const field =
@@ -104,13 +105,7 @@ export default function ExpenseForm({
           <label className={fieldLabel} htmlFor={`${uid}-date`}>
             Date
           </label>
-          <input
-            id={`${uid}-date`}
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className={field}
-          />
+          <DateField id={`${uid}-date`} value={date} onChange={setDate} />
         </div>
       </div>
 

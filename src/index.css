@@ -10,15 +10,17 @@
 :root {
   color-scheme: light;
 
-  --plane: #f9f9f7;
-  --surface-1: #fcfcfb;
-  --surface-2: #f0efec;
-  --text-primary: #0b0b0b;
-  --text-secondary: #52514e;
-  --text-muted: #898781;
-  --border: rgba(11, 11, 11, 0.1);
-  --accent: #2a78d6;
-  --accent-soft: rgba(42, 120, 214, 0.12);
+  --plane: #f7f8fa;
+  --surface-1: #ffffff;
+  --surface-2: #eef1f5;
+  --text-primary: #0b1220;
+  --text-secondary: #47526b;
+  --text-muted: #6e7689;
+  --border: rgba(15, 23, 42, 0.1);
+  --accent: #1d4ed8;
+  --accent-soft: rgba(29, 78, 216, 0.12);
+  --positive: #0f8a44;
+  --positive-soft: rgba(15, 138, 68, 0.12);
   --critical: #d03b3b;
 
   /* Categorical slots — bound to categories in lib/categories.js */
@@ -34,16 +36,18 @@
 .dark {
   color-scheme: dark;
 
-  --plane: #0d0d0d;
-  --surface-1: #1a1a19;
-  --surface-2: #242422;
-  --text-primary: #ffffff;
-  --text-secondary: #c3c2b7;
-  --text-muted: #898781;
-  --border: rgba(255, 255, 255, 0.1);
-  --accent: #3987e5;
-  --accent-soft: rgba(57, 135, 229, 0.18);
-  --critical: #d03b3b;
+  --plane: #0a0e17;
+  --surface-1: #12161f;
+  --surface-2: #1b2130;
+  --text-primary: #f5f7fa;
+  --text-secondary: #b7c0d1;
+  --text-muted: #7c8699;
+  --border: rgba(255, 255, 255, 0.09);
+  --accent: #3f6fe0;
+  --accent-soft: rgba(63, 111, 224, 0.18);
+  --positive: #22c55e;
+  --positive-soft: rgba(34, 197, 94, 0.16);
+  --critical: #f0576b;
 
   --series-food: #3987e5;
   --series-transport: #d95926;
@@ -64,7 +68,7 @@ body {
   margin: 0;
   background-color: var(--plane);
   color: var(--text-primary);
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -76,9 +80,9 @@ button {
   color: inherit;
 }
 
-/* The native date picker indicator is near-invisible on a dark surface. */
-.dark input[type='date']::-webkit-calendar-picker-indicator {
-  filter: invert(1) opacity(0.6);
+/* Headings and hero figures get the display face; see tailwind.config.js. */
+.font-display {
+  font-family: 'Lexend', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 :where(button, input, select, [tabindex]):focus-visible {

@@ -67,7 +67,7 @@ export default function Header({ month, onMonthChange, theme, onToggleTheme, use
   return (
     <header className="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">
+        <h1 className="font-display text-xl font-semibold tracking-tight">
           {userName ? `Hello, ${userName}` : 'Hello'}
         </h1>
         <p className="mt-0.5 text-sm text-[var(--text-muted)]">Track spending against a monthly budget</p>

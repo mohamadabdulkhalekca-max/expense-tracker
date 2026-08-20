@@ -43,7 +43,7 @@ export default function AuthScreen({ onSignIn, onSignUp }) {
   return (
     <div className="flex min-h-full items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] p-6">
-        <h1 className="text-lg font-semibold tracking-tight">
+        <h1 className="font-display text-lg font-semibold tracking-tight">
           {isSignUp ? 'Create an account' : 'Welcome back'}
         </h1>
         <p className="mt-0.5 text-sm text-[var(--text-muted)]">

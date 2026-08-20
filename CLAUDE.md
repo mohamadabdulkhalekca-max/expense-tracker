@@ -41,7 +41,7 @@ A single-page React 18 + Vite + Tailwind expense tracker with **Supabase as its 
 - `src/lib/storage.js` — the only module that still touches `localStorage`, now just for the `theme` key (device preference, not user data) plus the two read-only `legacy*` keys `migrateLegacyData.js` looks for. Reads/writes are try/caught: corrupt JSON must never white-screen the app, and a quota error must never throw out of a render.
 - `src/lib/format.js` — currency/date helpers. **Dates are plain `'YYYY-MM-DD'` strings, parsed by splitting on `'-'`, never with `new Date(str)`** — that parses a bare date as UTC and would shift an evening expense in a western timezone into the previous day and possibly the wrong month. Use `toISODate`, `parseISODate`, `monthKeyOf`, `toMonthKey`, `shiftMonth` rather than hand-rolling date math.
 - `src/lib/categories.js` — the seven categories and their permanent color slots.
-- `src/components/*` — presentational; `ExpenseForm` is used for both adding and editing (edit mode = `initialValues` + `onCancel` supplied). `AuthScreen` and `SupabaseSetupNotice` are the two screens `App.jsx` can render instead of the tracker.
+- `src/components/*` — presentational; `ExpenseForm` is used for both adding and editing (edit mode = `initialValues` + `onCancel` supplied). `AuthScreen` and `SupabaseSetupNotice` are the two screens `App.jsx` can render instead of the tracker. `DateField` is a custom-styled replacement for `<input type="date">` — the native control's OS chrome can't be themed and renders in whatever format the visitor's locale uses; `DateField` matches the app's own tokens and always displays an unambiguous `formatDateShort` string.
 
 **Money** is stored as `numeric(10,2)` in Postgres and rounded to cents (`Math.round(n * 100) / 100`) again at the hook boundary, so components can sum amounts directly.
 
@@ -54,6 +54,8 @@ Tailwind runs in `darkMode: 'class'`; the `dark` class goes on `<html>`. An inli
 Every color is a CSS custom property defined once per mode in `src/index.css` (`:root` and `.dark`) and referenced via `bg-[var(--surface-1)]`, `text-[var(--text-secondary)]`, etc. Do not introduce raw Tailwind color classes (`bg-slate-800`, `text-gray-500`) — they won't follow the theme toggle.
 
 Category colors are bound to the category, not to its position in a chart, so a slice keeps its hue regardless of sort order or which categories are present. Use `categoryColor(id)` to get the `var(--series-*)` string. The 7-slot palette was validated against the `dataviz` skill's palette validator in both light and dark; adding an eighth category or changing a hue requires re-running that validation.
+
+Two font families, both loaded from Google Fonts in `index.html`: **Lexend** (`font-display` utility, defined in `tailwind.config.js`) for headings and hero numbers — tile figures, the donut's center total, the greeting — and **Source Sans 3** as the body default. `--positive` (green) is the semantic "under budget" color, used only by `BudgetMeter`'s fill; it's distinct from `--accent` (brand/interactive blue) and `--critical` (over budget/destructive red) — don't reuse `--accent` for a positive/good state or `--positive` for anything interactive. All chrome colors (surfaces, text, accent, positive, critical) were re-verified against WCAG AA (4.5:1 text, 3:1 UI components) in both modes when last changed — recheck contrast with real ratios, not by eye, if you adjust any of them.
 
 ## Conventions
 

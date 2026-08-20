@@ -53,7 +53,7 @@ export default function BudgetMeter({ spent, budget }) {
           className="h-full rounded-full transition-[width] duration-300"
           style={{
             width: `${fillWidth}%`,
-            backgroundColor: isOver ? 'var(--critical)' : 'var(--accent)',
+            backgroundColor: isOver ? 'var(--critical)' : 'var(--positive)',
           }}
         />
       </div>

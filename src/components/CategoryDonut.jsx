@@ -112,7 +112,7 @@ export default function CategoryDonut({ expenses }) {
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           {active === null ? (
             <>
-              <span className="text-[2.25rem] font-semibold leading-none tracking-tight">
+              <span className="font-display text-[2.25rem] font-semibold leading-none tracking-tight">
                 {formatCurrencyCompact(total)}
               </span>
               <span className="mt-1.5 text-xs text-[var(--text-secondary)]">spent</span>
@@ -122,7 +122,7 @@ export default function CategoryDonut({ expenses }) {
               const slice = slices.find((s) => s.id === active)
               return (
                 <>
-                  <span className="text-[2rem] font-semibold leading-none tracking-tight">
+                  <span className="font-display text-[2rem] font-semibold leading-none tracking-tight">
                     {formatCurrencyCompact(slice.value)}
                   </span>
                   <span className="mt-1.5 max-w-[7.5rem] text-center text-xs text-[var(--text-secondary)]">

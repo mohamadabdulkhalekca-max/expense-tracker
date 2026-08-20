@@ -23,7 +23,7 @@ function Card({ title, children, className = '' }) {
     <section
       className={`rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] p-5 sm:p-6 ${className}`}
     >
-      {title ? <h2 className="mb-4 text-sm font-semibold">{title}</h2> : null}
+      {title ? <h2 className="font-display mb-4 text-sm font-semibold">{title}</h2> : null}
       {children}
     </section>
   )

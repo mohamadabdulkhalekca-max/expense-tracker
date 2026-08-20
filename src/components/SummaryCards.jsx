@@ -44,7 +44,7 @@ function BudgetField({ budget, onSetBudget }) {
 
   if (editing) {
     return (
-      <div className="flex items-center gap-1 text-2xl font-semibold">
+      <div className="font-display flex items-center gap-1 text-2xl font-semibold">
         <span className="text-[var(--text-muted)]">$</span>
         <input
           ref={inputRef}
@@ -60,7 +60,7 @@ function BudgetField({ budget, onSetBudget }) {
             if (e.key === 'Escape') setEditing(false)
           }}
           aria-label="Monthly budget"
-          className="w-full min-w-0 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-2xl font-semibold outline-none"
+          className="w-full min-w-0 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 font-display text-2xl font-semibold outline-none"
         />
       </div>
     )
@@ -74,7 +74,7 @@ function BudgetField({ budget, onSetBudget }) {
       aria-label={budget === null ? 'Set monthly budget' : `Monthly budget ${formatCurrency(budget)}. Edit`}
     >
       <span
-        className={`text-2xl font-semibold ${budget === null ? 'text-[var(--text-muted)]' : ''}`}
+        className={`font-display text-2xl font-semibold ${budget === null ? 'text-[var(--text-muted)]' : ''}`}
       >
         {budget === null ? 'Set budget' : formatCurrency(budget)}
       </span>
@@ -92,7 +92,7 @@ export default function SummaryCards({ spent, budget, onSetBudget, monthLabel })
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
       <Tile label="Spent" hint={monthLabel}>
-        <p className="text-2xl font-semibold">{formatCurrency(spent)}</p>
+        <p className="font-display text-2xl font-semibold">{formatCurrency(spent)}</p>
       </Tile>
 
       {/* The hero figure: the number this app exists to answer. */}
@@ -101,7 +101,7 @@ export default function SummaryCards({ spent, budget, onSetBudget, monthLabel })
         hint={budget === null ? 'Set a budget to track this' : undefined}
       >
         <p
-          className="text-4xl font-semibold tracking-tight"
+          className="font-display text-4xl font-semibold tracking-tight"
           style={isOver ? { color: 'var(--critical)' } : undefined}
         >
           {remaining === null ? '—' : formatCurrency(Math.abs(remaining))}
