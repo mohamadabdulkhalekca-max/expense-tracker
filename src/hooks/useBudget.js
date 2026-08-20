@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
 /**
@@ -9,7 +9,14 @@ import { supabase } from '../lib/supabaseClient'
 export function useBudget(userId, month) {
   const [budget, setBudgetState] = useState(null)
 
+  // Guards against a slow refresh() resolving after a more recent mutation
+  // (or a switch to a different month) and clobbering it with stale data --
+  // every state-changing call bumps this, and a refresh whose sequence
+  // number has been superseded by the time it resolves is dropped.
+  const requestSeq = useRef(0)
+
   const refresh = useCallback(async () => {
+    const seq = ++requestSeq.current
     if (!userId || !month) {
       setBudgetState(null)
       return
@@ -20,6 +27,7 @@ export function useBudget(userId, month) {
       .eq('user_id', userId)
       .eq('month', month)
       .maybeSingle()
+    if (seq !== requestSeq.current) return
     if (!error) setBudgetState(data?.amount ?? null)
     else console.error('Failed to load budget', error)
   }, [userId, month])
@@ -31,6 +39,7 @@ export function useBudget(userId, month) {
   const setBudget = useCallback(
     async (value) => {
       if (!userId || !month) return
+      requestSeq.current += 1
 
       if (value === null || value === '') {
         setBudgetState(null)

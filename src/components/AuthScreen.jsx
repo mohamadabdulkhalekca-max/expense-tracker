@@ -22,7 +22,7 @@ export default function AuthScreen({ onSignIn, onSignUp }) {
     setInfo('')
     setSubmitting(true)
 
-    const { error: authError } = isSignUp
+    const { data, error: authError } = isSignUp
       ? await onSignUp(email, password)
       : await onSignIn(email, password)
 
@@ -31,7 +31,11 @@ export default function AuthScreen({ onSignIn, onSignUp }) {
       setError(authError.message)
       return
     }
-    if (isSignUp) {
+    // A session on the sign-up response means email confirmation is off and
+    // the user is already logged in -- App.jsx swaps this screen out on its
+    // own, so there's nothing to tell them. Only show the message when
+    // confirmation is actually pending (no session yet).
+    if (isSignUp && !data?.session) {
       setInfo('Check your email to confirm your account, then sign in.')
     }
   }

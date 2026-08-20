@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
 function fromRow(row) {
@@ -20,7 +20,14 @@ function fromRow(row) {
 export function useExpenses(userId) {
   const [expenses, setExpenses] = useState([])
 
+  // Guards against a slow refresh() resolving after a more recent mutation
+  // and clobbering it with stale data -- every state-changing call bumps
+  // this, and a refresh whose sequence number has been superseded by the
+  // time it resolves is dropped instead of applied.
+  const requestSeq = useRef(0)
+
   const refresh = useCallback(async () => {
+    const seq = ++requestSeq.current
     if (!userId) {
       setExpenses([])
       return
@@ -30,6 +37,7 @@ export function useExpenses(userId) {
       .select('*')
       .eq('user_id', userId)
       .order('date', { ascending: false })
+    if (seq !== requestSeq.current) return
     if (!error) setExpenses((data ?? []).map(fromRow))
     else console.error('Failed to load expenses', error)
   }, [userId])
@@ -40,6 +48,7 @@ export function useExpenses(userId) {
 
   const addExpense = useCallback(
     async ({ name, amount, category, date }) => {
+      requestSeq.current += 1
       const { data, error } = await supabase
         .from('expenses')
         .insert({
@@ -64,6 +73,7 @@ export function useExpenses(userId) {
 
   /** Replace an expense's editable fields. `id` and `createdAt` are preserved. */
   const updateExpense = useCallback(async (id, { name, amount, category, date }) => {
+    requestSeq.current += 1
     const patch = {
       name: name.trim(),
       amount: Math.round(Number(amount) * 100) / 100,
@@ -79,6 +89,7 @@ export function useExpenses(userId) {
   }, [])
 
   const deleteExpense = useCallback(async (id) => {
+    requestSeq.current += 1
     const { error } = await supabase.from('expenses').delete().eq('id', id)
     if (error) {
       console.error('Failed to delete expense', error)

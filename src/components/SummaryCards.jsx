@@ -113,7 +113,8 @@ export default function SummaryCards({ spent, budget, onSetBudget, monthLabel })
         ) : null}
       </Tile>
 
-      <Tile label="Monthly budget" hint="Applies to every month">
+      <Tile label="Monthly budget" hint={monthLabel}>
+        {/* Budgets are per-month now (Supabase), not a single value for every month. */}
         <BudgetField budget={budget} onSetBudget={onSetBudget} />
       </Tile>
     </div>
